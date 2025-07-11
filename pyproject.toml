@@ -8,4 +8,6 @@ dependencies = [
     "adafruit-circuitpython-dht>=4.0.9",
     "gpiozero>=2.0.1",
     "lgpio>=0.2.2.0",
+    "paho-mqtt>=2.1.0",
+    "python-dotenv>=1.1.1",
 ]

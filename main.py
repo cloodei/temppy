@@ -1,30 +1,26 @@
-import adafruit_dht
-import board
-from time import sleep
-from gpiozero import LED
+import paho.mqtt.client as paho
+import temp
+from dotenv import load_dotenv
+from os import getenv
+from paho import mqtt
 
-dht = adafruit_dht.DHT11(board.D10)
-led = LED(5)
+load_dotenv()
+username = getenv("MQTT_USERNAME")
+password = getenv("MQTT_PASSWORD")
+cluster_url = getenv("MQTT_CLUSTER_URL")
 
-def read_sensor():
-    try:
-        temp = dht.temperature
-        hum = dht.humidity
-        print(f"Temperature: {temp}°C, Humidity: {hum}%")
-        
-        if temp > 30:
-            led.on()
-            print("LED is ON")
-        else:
-            led.off()
-            print("LED is OFF")
-    except RuntimeError as e:
-        print(f"RuntimeError: {e.args[0]}")
-    except Exception as e:
-        dht.exit()
-        raise e
-    finally:
-        sleep(3)
+mqttClient = paho.Client(client_id="", protocol=paho.MQTTv5)
+mqttClient.on_connect = lambda client, userdata, flags, rc: print(f"Connected with result code {rc}")
 
+mqttClient.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+mqttClient.username_pw_set(username, password)
+mqttClient.connect(cluster_url, 8883)
+
+mqttClient.loop_start()
 while True:
-    read_sensor()
+    input("Press Enter to read sensor data...")
+    try:
+        temperature, humidity = temp.read_sensor()
+        mqttClient.publish("pi/readings", f"{temperature} {humidity}%", qos=1)
+    except Exception as e:
+        print(f"Error reading pi data: {e}")
