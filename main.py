@@ -1,6 +1,7 @@
 import paho.mqtt.client as paho
 import rpi
 import requests
+import time
 from dotenv import load_dotenv
 from os import getenv
 from paho import mqtt
@@ -12,7 +13,7 @@ password = getenv("MQTT_PASSWORD")
 cluster_url = getenv("MQTT_CLUSTER_URL")
 
 mqttClient = paho.Client(client_id="", protocol=paho.MQTTv5)
-mqttClient.on_connect = lambda client, userdata, flags, rc: print(f"Connected with result code {rc}")
+mqttClient.on_connect = lambda client, userdata, flags, rc, properties: print(f"Connected with result code {rc}")
 
 mqttClient.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
 mqttClient.username_pw_set(username, password)
@@ -36,6 +37,7 @@ while True:
         print(f"Error during login: {e}. Please check your network connection or API endpoint.")
         raise e
 
+time.sleep(1)
 while True:
     room = input("Nhập tên phòng ('q' để thoát): ").strip().lower()
     match room:
@@ -45,7 +47,7 @@ while True:
             break
         case _:
             print("Đọc dữ liệu từ cảm biến...")
-            break
+            mqttClient.publish(topic="pi/readings", payload=room, qos=1)
 
     try:
         temperature, humidity = rpi.read_sensor()
