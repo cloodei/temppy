@@ -16,6 +16,7 @@ def read_sensor():
         return dht._temperature, dht._humidity
     except RuntimeError as e:
         print(f"RuntimeError: {e.args[0]}")
+        return None, None
     except Exception as e:
         dht.exit()
         raise e
@@ -27,5 +28,7 @@ if __name__ == "__main__":
             print(f"Temperature: {temperature}°C, Humidity: {humidity}%")
         except Exception as e:
             print(f"Error reading sensor data: {e}")
-        time.sleep(3)
+        time.sleep(0.25)
         led.on()
+        time.sleep(2.75)
+        led.off()

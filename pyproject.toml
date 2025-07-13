@@ -10,4 +10,5 @@ dependencies = [
     "lgpio>=0.2.2.0",
     "paho-mqtt>=2.1.0",
     "python-dotenv>=1.1.1",
+    "requests>=2.32.4",
 ]
