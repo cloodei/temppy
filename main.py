@@ -15,6 +15,7 @@ cluster_url = getenv("MQTT_CLUSTER_URL")
 
 
 def pub_components(client: paho.Client):
+    client.publish(topic="pi/online", payload="1", qos=1)
     if rpi.ledPayload:
         client.publish(topic="pi/led", payload=rpi.ledPayload, qos=1)
     if rpi.relayPayload:
@@ -22,7 +23,6 @@ def pub_components(client: paho.Client):
 
 def on_connect(client, userdata, flags, rc, properties=None):
     pub_components(client)
-    client.publish(topic="pi/online", payload="1", qos=1)
 
     client.subscribe("client/relay", qos=1)
     client.subscribe("client/online", qos=1)
@@ -32,10 +32,9 @@ def on_connect(client, userdata, flags, rc, properties=None):
 def on_message(client, userdata, message):
     payload = message.payload.decode()
     if message.topic == "client/online":
-        client.publish(topic="pi/online", payload="1", qos=1)
-        client.publish(topic="client/led", payload=rpi.ledPayload, qos=2)
+        pub_components(client)
 
-    if message.topic.startswith("client/led"):
+    elif message.topic == "client/led":
         led_idx = int(payload.split("|")[0])
         if 0 <= led_idx < len(rpi.leds):
             led = rpi.leds[led_idx]
@@ -116,6 +115,8 @@ while True:
         case "exit" | "stop" | "quit" | "close" | "esc" | "q" | "x" | "0":
             disconnect()
             break
+        case "":
+            room = "phòng khách"
         case _:
             print("Đọc dữ liệu từ cảm biến...")
 

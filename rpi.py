@@ -23,7 +23,7 @@ class MyRelay(gpiozero.OutputDevice):
 
 class MyLED(LED):
     color: str
-    def __init__(self, pin, color="Red"):
+    def __init__(self, pin, color: str ="Red"):
         super().__init__(pin)
         self.color = color
 
@@ -34,8 +34,8 @@ class MyLED(LED):
         super().off()
 
 dht = adafruit_dht.DHT11(board.D10)
-leds: list[MyLED] = [MyLED(12), MyLED(23, "Yellow"), MyLED(24, "Yellow")]
-relays: list[MyRelay] = [MyRelay(21)]
+leds: list[MyLED] = [MyLED(5, "Yellow"), MyLED(6), MyLED(13, "Yellow"), MyLED(19, "Green")]
+relays: list[MyRelay] = [MyRelay(21, name="Đèn LED Xanh")]
 
 ledPayload = "|".join([led.color + "0" for led in leds]) if len(leds) > 0 else None
 relayPayload = "|".join([relay.name + "0" for relay in relays]) if len(relays) > 0 else None
@@ -56,16 +56,25 @@ def read_sensor():
 
 if __name__ == "__main__":
     while True:
-        # try:
-        #     temperature, humidity = read_sensor()
-        #     print(f"Temperature: {temperature}°C, Humidity: {humidity}%")
-        # except Exception as e:
-        #     print(f"Error reading sensor data: {e}")
         try:
+            temperature, humidity = read_sensor()
+            print(f"Temperature: {temperature}°C, Humidity: {humidity}%")
+        except Exception as e:
+            print(f"Error reading sensor data: {e}")
+        try:
+            time.sleep(1)
+            leds[0].on()
+            leds[1].on()
+            leds[2].on()
+            leds[3].on()
             time.sleep(2)
-            relays[0].on()
-            time.sleep(2)
-            relays[0].off()
+            leds[0].off()
+            leds[1].off()
+            leds[2].off()
+            leds[3].off()
             print("LED 0 turned ON for 2 seconds")
         except Exception as e:
             print(f"Error controlling LED: {e}")
+
+        # time.sleep(1)
+        # print()
