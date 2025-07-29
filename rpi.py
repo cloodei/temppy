@@ -54,27 +54,27 @@ def read_sensor():
         dht.exit()
         raise e
 
-if __name__ == "__main__":
-    while True:
-        try:
-            temperature, humidity = read_sensor()
-            print(f"Temperature: {temperature}°C, Humidity: {humidity}%")
-        except Exception as e:
-            print(f"Error reading sensor data: {e}")
-        try:
-            time.sleep(1)
-            leds[0].on()
-            leds[1].on()
-            leds[2].on()
-            leds[3].on()
-            time.sleep(2)
-            leds[0].off()
-            leds[1].off()
-            leds[2].off()
-            leds[3].off()
-            print("LED 0 turned ON for 2 seconds")
-        except Exception as e:
-            print(f"Error controlling LED: {e}")
+# if __name__ == "__main__":
+#     while True:
+#         try:
+#             temperature, humidity = read_sensor()
+#             print(f"Temperature: {temperature}°C, Humidity: {humidity}%")
+#         except Exception as e:
+#             print(f"Error reading sensor data: {e}")
+#         try:
+#             time.sleep(1)
+#             leds[0].on()
+#             leds[1].on()
+#             leds[2].on()
+#             leds[3].on()
+#             time.sleep(2)
+#             leds[0].off()
+#             leds[1].off()
+#             leds[2].off()
+#             leds[3].off()
+#             print("LED 0 turned ON for 2 seconds")
+#         except Exception as e:
+#             print(f"Error controlling LED: {e}")
 
         # time.sleep(1)
         # print()

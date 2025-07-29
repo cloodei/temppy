@@ -13,6 +13,7 @@ username = getenv("MQTT_USERNAME")
 password = getenv("MQTT_PASSWORD")
 cluster_url = getenv("MQTT_CLUSTER_URL")
 
+readsend = False
 
 def pub_components(client: paho.Client):
     client.publish(topic="pi/online", payload="1", qos=1)
@@ -24,15 +25,26 @@ def pub_components(client: paho.Client):
 def on_connect(client, userdata, flags, rc, properties=None):
     pub_components(client)
 
+    client.subscribe("client/dht", qos=1)
     client.subscribe("client/relay", qos=1)
     client.subscribe("client/online", qos=1)
     client.subscribe("client/led", qos=1)
     print("Đã kết nối tới MQTT broker.")
 
-def on_message(client, userdata, message):
+def on_message(client, _, message):
     payload = message.payload.decode()
     if message.topic == "client/online":
         pub_components(client)
+
+    elif message.topic == "client/dht":
+        global readsend
+        room = payload.strip()
+        if room == "0":
+            readsend = False
+            return
+        readsend = True
+        # with open("room.txt", "w") as file:
+        #     file.write(room)
 
     elif message.topic == "client/led":
         led_idx = int(payload.split("|")[0])
@@ -63,8 +75,12 @@ def disconnect():
     mqttClient.disconnect()
     print("Đã ngắt kết nối khỏi MQTT broker.")
 
-signal.signal(signalnum=signal.SIGINT, handler=lambda signum, frame: disconnect())
-signal.signal(signalnum=signal.SIGTERM, handler=lambda signum, frame: disconnect())
+def kill():
+    disconnect()
+    exit(0)
+
+signal.signal(signalnum=signal.SIGINT, handler=lambda signum, frame: kill())
+signal.signal(signalnum=signal.SIGTERM, handler=lambda signum, frame: kill())
 
 mqttClient.will_set(topic="pi/online", payload="0", qos=1, retain=True)
 
@@ -110,23 +126,46 @@ while user_id <= 0:
         raise e
 
 while True:
-    room = input("Nhập tên phòng ('q' để thoát): ").strip()
-    match room.lower():
-        case "exit" | "stop" | "quit" | "close" | "esc" | "q" | "x" | "0":
-            disconnect()
-            break
-        case "":
-            room = "phòng khách"
-        case _:
-            print("Đọc dữ liệu từ cảm biến...")
+    if not readsend:
+        time.sleep(1.5)
+        continue
+    
+    with open("room.txt", "r") as file:
+        room = file.read().strip()
 
+    print(f"Đang đọc dữ liệu từ cảm biến trong phòng: {room}...")
     try:
         temperature, humidity = rpi.read_sensor()
         if temperature is None or humidity is None:
             print("Không đọc được dữ liệu từ cảm biến. Vui lòng kiểm tra kết nối.")
             continue
-        
-        print(f"Nhiệt độ: {temperature}°C, Độ ẩm: {humidity}%")
+
+        print(f"Nhiệt độ: {temperature}°C  |  Độ ẩm: {humidity}%")
         mqttClient.publish(topic="pi/readings", payload=f"{user_id}|{temperature}|{humidity}|{room}", qos=1)
     except Exception as e:
         print(f"Lỗi khi đọc dữ liệu từ cảm biến: {e}. Vui lòng kiểm tra kết nối cảm biến.")
+    finally:
+        time.sleep(8)
+
+
+# while True:
+#     room = input("Nhập tên phòng ('q' để thoát): ").strip()
+#     match room.lower():
+#         case "exit" | "stop" | "quit" | "close" | "esc" | "q" | "x" | "0":
+#             disconnect()
+#             break
+#         case "":
+#             room = "phòng khách"
+#         case _:
+#             print("Đọc dữ liệu từ cảm biến...")
+
+#     try:
+#         temperature, humidity = rpi.read_sensor()
+#         if temperature is None or humidity is None:
+#             print("Không đọc được dữ liệu từ cảm biến. Vui lòng kiểm tra kết nối.")
+#             continue
+        
+#         print(f"Nhiệt độ: {temperature}°C, Độ ẩm: {humidity}%")
+#         mqttClient.publish(topic="pi/readings", payload=f"{user_id}|{temperature}|{humidity}|{room}", qos=1)
+#     except Exception as e:
+#         print(f"Lỗi khi đọc dữ liệu từ cảm biến: {e}. Vui lòng kiểm tra kết nối cảm biến.")
