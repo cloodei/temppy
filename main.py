@@ -13,38 +13,40 @@ username = getenv("MQTT_USERNAME")
 password = getenv("MQTT_PASSWORD")
 cluster_url = getenv("MQTT_CLUSTER_URL")
 
-readsend = False
-
 def pub_components(client: paho.Client):
+    ledpayload = rpi.ledPayload()
+    relaypayload = rpi.relayPayload()
+    dhtpayload = rpi.dhtPayload()
+
     client.publish(topic="pi/online", payload="1", qos=1)
-    if rpi.ledPayload:
-        client.publish(topic="pi/led", payload=rpi.ledPayload, qos=1)
-    if rpi.relayPayload:
-        client.publish(topic="pi/relay", payload=rpi.relayPayload, qos=1)
+    if ledpayload:
+        client.publish(topic="pi/led", payload=ledpayload, qos=1)
+
+    if relaypayload:
+        client.publish(topic="pi/relay", payload=relaypayload, qos=1)
+
+    if dhtpayload:
+        client.publish(topic="pi/dht", payload=dhtpayload, qos=1)
 
 def on_connect(client, userdata, flags, rc, properties=None):
     pub_components(client)
-
+    client.subscribe("client/led", qos=1)
     client.subscribe("client/dht", qos=1)
     client.subscribe("client/relay", qos=1)
     client.subscribe("client/online", qos=1)
-    client.subscribe("client/led", qos=1)
     print("Đã kết nối tới MQTT broker.")
 
 def on_message(client, _, message):
-    payload = message.payload.decode()
+    payload = message.payload.decode().strip()
     if message.topic == "client/online":
         pub_components(client)
 
     elif message.topic == "client/dht":
-        global readsend
-        room = payload.strip()
-        if room == "0":
-            readsend = False
-            return
-        readsend = True
-        # with open("room.txt", "w") as file:
-        #     file.write(room)
+        rpi.readsend = payload == "1"
+        if rpi.readsend:
+            print("Bắt đầu đọc dữ liệu")
+        else:
+            print("Dừng đọc dữ liệu")
 
     elif message.topic == "client/led":
         led_idx = int(payload.split("|")[0])
@@ -63,7 +65,7 @@ def on_message(client, _, message):
                 relay.on()
             else:
                 relay.off()
-            print(f"Relay {relay.name} is now {'ON' if relay.is_active else 'OFF'}")
+            print(f"Rơ le {relay.name} {'bật' if relay.is_active else 'tắt'}")
 
 
 mqttClient = paho.Client(client_id="", protocol=paho.MQTTv5)
@@ -125,15 +127,15 @@ while user_id <= 0:
         print(f"Error during login: {e}. Please check your network connection or API endpoint.")
         raise e
 
+room = None
+with open("room.txt", "r") as file:
+    room = file.read().strip()
+
 while True:
-    if not readsend:
+    if not rpi.readsend:
         time.sleep(1.5)
         continue
-    
-    with open("room.txt", "r") as file:
-        room = file.read().strip()
 
-    print(f"Đang đọc dữ liệu từ cảm biến trong phòng: {room}...")
     try:
         temperature, humidity = rpi.read_sensor()
         if temperature is None or humidity is None:
@@ -146,26 +148,3 @@ while True:
         print(f"Lỗi khi đọc dữ liệu từ cảm biến: {e}. Vui lòng kiểm tra kết nối cảm biến.")
     finally:
         time.sleep(8)
-
-
-# while True:
-#     room = input("Nhập tên phòng ('q' để thoát): ").strip()
-#     match room.lower():
-#         case "exit" | "stop" | "quit" | "close" | "esc" | "q" | "x" | "0":
-#             disconnect()
-#             break
-#         case "":
-#             room = "phòng khách"
-#         case _:
-#             print("Đọc dữ liệu từ cảm biến...")
-
-#     try:
-#         temperature, humidity = rpi.read_sensor()
-#         if temperature is None or humidity is None:
-#             print("Không đọc được dữ liệu từ cảm biến. Vui lòng kiểm tra kết nối.")
-#             continue
-        
-#         print(f"Nhiệt độ: {temperature}°C, Độ ẩm: {humidity}%")
-#         mqttClient.publish(topic="pi/readings", payload=f"{user_id}|{temperature}|{humidity}|{room}", qos=1)
-#     except Exception as e:
-#         print(f"Lỗi khi đọc dữ liệu từ cảm biến: {e}. Vui lòng kiểm tra kết nối cảm biến.")
