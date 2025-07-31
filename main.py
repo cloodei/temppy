@@ -65,7 +65,8 @@ def on_message(client, _, message):
                 relay.on()
             else:
                 relay.off()
-            print(f"Rơ le {relay.name} {'bật' if relay.is_active else 'tắt'}")
+
+    print(f"Đã nhận tin nhắn từ {message.topic}: {payload}")
 
 
 mqttClient = paho.Client(client_id="", protocol=paho.MQTTv5)
@@ -113,7 +114,7 @@ while user_id <= 0:
             print("Tên đăng nhập không đúng. Vui lòng thử lại.")
             continue
 
-        user_id = res.get("user_id", 0)
+        user_id: int = res.get("id", 0)
         if user_id <= 0:
             print("Không tìm thấy người dùng. Vui lòng kiểm tra lại thông tin đăng nhập.")
             continue
