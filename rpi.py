@@ -23,8 +23,9 @@ class MyRelay(gpiozero.OutputDevice):
 class MyLED(LED):
     color: str
     def __init__(self, pin, color="Red"):
-        super().__init__(pin)
         self.color = color
+        super().__init__(pin)
+        self.off()
 
     def on(self):
         super().on()
@@ -51,11 +52,6 @@ def read_sensor():
         dht.exit()
         raise e
 
-for relay in relays:
-    relay.off()
-for led in leds:
-    led.off()
-
     
 def ledPayload():
     return "|".join([(led.color + ("1" if led.is_active else "0")) for led in leds]) if len(leds) > 0 else None
@@ -63,7 +59,6 @@ def ledPayload():
 def relayPayload():    
     with open("room.txt", "r") as file:
         room = file.read().strip()
-        
         return "|".join([f"{relay.name}-{room}-{('1' if relay.is_active else '0')}" for relay in relays]) if len(relays) > 0 else None
     
 def dhtPayload():

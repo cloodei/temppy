@@ -43,10 +43,6 @@ def on_message(client, _, message):
 
     elif message.topic == "client/dht":
         rpi.readsend = payload == "1"
-        if rpi.readsend:
-            print("Bắt đầu đọc dữ liệu")
-        else:
-            print("Dừng đọc dữ liệu")
 
     elif message.topic == "client/led":
         led_idx = int(payload.split("|")[0])
@@ -121,6 +117,9 @@ while user_id <= 0:
 
         if user_id is not None:
             print(f"Đăng nhập thành công với ID người dùng: {user_id}")
+            with open(".env", "a") as env_file:
+                env_file.write(f"USER_ID={user_id}\n")
+
             break
         else:
             print("Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin đăng nhập.")
