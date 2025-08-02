@@ -2,9 +2,9 @@
 Đọc dữ liệu từ cảm biến DHT11
 """
 
-import adafruit_dht
 import board
 import gpiozero
+import adafruit_dht
 from gpiozero import LED
 
 class MyRelay(gpiozero.OutputDevice):
@@ -52,22 +52,18 @@ def read_sensor():
         dht.exit()
         raise e
 
-    
+
 def ledPayload():
     return "|".join([(led.color + ("1" if led.is_active else "0")) for led in leds]) if len(leds) > 0 else None
 
-def relayPayload():    
-    with open("room.txt", "r") as file:
-        room = file.read().strip()
-        return "|".join([f"{relay.name}-{room}-{('1' if relay.is_active else '0')}" for relay in relays]) if len(relays) > 0 else None
+def relayPayload(room: str):
+    return "|".join([f"{relay.name}-{room}-{('1' if relay.is_active else '0')}" for relay in relays]) if len(relays) > 0 else None
     
-def dhtPayload():
+def dhtPayload(room: str):
     try:
         dht.measure()
-        with open("room.txt", "r") as file:
-            global readsend
-            room = file.read().strip()
-            return f"{room}{'1' if readsend else '0'}"
+        global readsend
+        return f"{room}{'1' if readsend else '0'}"
     except RuntimeError as e:
         print(f"RuntimeError: {e.args[0]}")
         return None
