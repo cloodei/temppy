@@ -94,7 +94,6 @@ def on_message(client, _, message):
 
     elif message.topic == "client/dht":
         rpi.readsend = payload == "1"
-    # print(f"Đã nhận tin nhắn từ {message.topic}: {payload}")
 
 
 mqttClient = paho.Client(client_id="", protocol=paho.MQTTv5)
@@ -172,8 +171,8 @@ while True:
             print("Không đọc được dữ liệu từ cảm biến. Vui lòng kiểm tra kết nối.")
             continue
 
-        print(f"{temperature}  {humidity}")
         mqttClient.publish(topic="pi/readings", payload=f"{user_id}|{temperature}|{humidity}|{room}", qos=1)
+        print(f"{temperature} {humidity}")
     except Exception as e:
         print(f"Lỗi khi đọc dữ liệu từ cảm biến: {e}. Vui lòng kiểm tra kết nối cảm biến.")
     finally:

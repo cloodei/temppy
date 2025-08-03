@@ -14,24 +14,12 @@ class MyRelay(gpiozero.OutputDevice):
         super().__init__(pin, active_high=True, initial_value=False)
         self.off()
 
-    def on(self):
-        super().on()
-
-    def off(self):
-        super().off()
-
 class MyLED(LED):
     color: str
     def __init__(self, pin, color="Red"):
         self.color = color
         super().__init__(pin)
         self.off()
-
-    def on(self):
-        super().on()
-
-    def off(self):
-        super().off()
 
 readsend = False
 
@@ -45,7 +33,6 @@ def read_sensor():
         dht.measure()
         return dht._temperature, dht._humidity
     except RuntimeError as e:
-        dht.exit()
         print(f"RuntimeError: {e.args[0]}")
         return None, None
     except Exception as e:
