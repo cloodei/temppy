@@ -10,7 +10,3 @@ wheels/
 .venv
 
 .env
-
-room.txt
-
-try.py
