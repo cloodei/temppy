@@ -14,7 +14,7 @@ class MyRelay(gpiozero.OutputDevice):
         super().__init__(pin, active_high=True, initial_value=False)
         self.off()
 
-class MyLED(LED):
+class MyLED(pin=LED):
     color: str
     def __init__(self, pin, color="Red"):
         self.color = color
@@ -23,9 +23,9 @@ class MyLED(LED):
 
 readsend = False
 
-dht = adafruit_dht.DHT11(board.D10)
-leds: list[MyLED] = [MyLED(5, "Yellow"), MyLED(6), MyLED(13, "Yellow"), MyLED(19, "Green")]
-relays: list[MyRelay] = [MyRelay(21, name="Đèn LED Xanh")]
+dht = adafruit_dht.DHT11(pin=board.D10)
+leds: list[MyLED] = [MyLED(pin=5, color="Yellow"), MyLED(pin=6, color="Red"), MyLED(pin=13, color="Yellow"), MyLED(pin=19, color="Green")]
+relays: list[MyRelay] = [MyRelay(pin=21, name="Đèn LED Xanh")]
 
 def read_sensor():
     global dht
